@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand">🪵 Workout Tracker</div>
+  <button class="nav-btn" data-page="home">Home</button>
+  <button class="nav-btn" data-page="calendar">Calendar workout</button>
+  <button class="nav-btn" data-page="photos">Body photo</button>
+</nav>
+
+<main>
+  <div id="error-banner" class="error-banner" hidden></div>
+
+  <!-- ===== Home ===== -->
+  <section id="page-home" class="page">
+    <div class="card card-hero">
+      <h2><span class="icon">⚖️</span> น้ำหนักตัว</h2>
+      <div id="trend-badge" class="trend-badge flat">กำลังโหลดข้อมูล...</div>
+      <div class="chart-wrap"><canvas id="weight-chart"></canvas></div>
+    </div>
+
+    <div class="cards-row">
+      <div class="card">
+        <h2><span class="icon">🏋️</span> วันที่ออกกำลังกาย</h2>
+        <div id="home-cal-label" class="mini-cal-label"></div>
+        <div id="home-cal-grid" class="mini-cal-grid"></div>
+        <div id="home-cal-caption" class="mini-cal-caption"></div>
+      </div>
+
+      <div class="card calories-card">
+        <h2><span class="icon">🍽️</span> โภชนาการวันนี้</h2>
+        <div class="diet-rows">
+          <button type="button" class="diet-row" id="cal-target-row">
+            <span class="diet-row-label">เป้าหมายแคล</span>
+            <span class="diet-row-value" id="cal-target-value">—</span>
+          </button>
+          <button type="button" class="diet-row" id="cal-in-row">
+            <span class="diet-row-label">แคลที่กินไป</span>
+            <span class="diet-row-value" id="cal-in-value">—</span>
+          </button>
+        </div>
+        <div class="calories-date" id="calories-date">กำลังโหลด...</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="icon">👣</span> Step ย้อนหลัง</h2>
+        <div id="steps-card-body">
+          <div class="chart-wrap small"><canvas id="steps-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Calendar ===== -->
+  <section id="page-calendar" class="page">
+    <div class="calendar-nav">
+      <button id="cal-prev">‹</button>
+      <h2 id="cal-month-label"></h2>
+      <button id="cal-next">›</button>
+    </div>
+    <div class="card">
+      <div id="calendar-grid" class="calendar-grid"></div>
+    </div>
+    <div id="day-detail" class="card day-detail" hidden></div>
+  </section>
+
+  <!-- ===== Body Photo ===== -->
+  <section id="page-photos" class="page">
+    <div class="card">
+      <h2><span class="icon">📷</span> Body Photo</h2>
+      <p style="color:var(--ink-soft); font-size:0.9rem;">
+        รูปจะถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้น (local storage) เนื่องจากเว็บนี้ไม่มี backend —
+        ไม่ซิงก์ข้ามอุปกรณ์ และไม่ถูกเขียนกลับไปที่ Google Sheet
+      </p>
+      <div class="upload-zone">
+        <div>เลือกวันที่ของรูป แล้วอัปโหลดได้เลย</div>
+        <input type="date" id="photo-date" class="photo-date-picker">
+        <div>
+          <label for="photo-input" class="upload-btn">+ เพิ่มรูป</label>
+          <input type="file" id="photo-input" accept="image/*" multiple>
+        </div>
+      </div>
+      <div id="photo-gallery" class="photo-gallery"></div>
+    </div>
+  </section>
+
+  <div class="status-line">
+    <span id="status-text">กำลังโหลดข้อมูล...</span>
+    <button id="refresh-btn">รีเฟรชตอนนี้</button>
+  </div>
+</main>
+
+<div class="macro-popup-overlay" id="macro-popup-overlay" hidden>
+  <div class="macro-popup">
+    <button type="button" class="macro-popup-close" id="macro-popup-close">✕</button>
+    <h3 id="macro-popup-title"></h3>
+    <div class="macro-popup-sub" id="macro-popup-sub"></div>
+    <div class="macro-popup-grid" id="macro-popup-grid"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<script src="app.js"></script>
+<script src="photos.js"></script>
+</body>
+</html>

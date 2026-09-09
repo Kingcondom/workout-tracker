@@ -1,0 +1,39 @@
+name: Sync workout days from Google Calendar
+
+on:
+  schedule:
+    # Runs roughly every 3 days at 03:00 UTC. (Cron can't express "every N
+    # days" exactly across month boundaries — this runs on days-of-month
+    # 1,4,7,...,31, which drifts slightly at the wrap-around but stays
+    # close to a 3-day cadence.)
+    - cron: "0 3 */3 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install python-dateutil
+
+      - name: Fetch calendar and rebuild workout-days.json
+        env:
+          CALENDAR_ICS_URL: ${{ secrets.CALENDAR_ICS_URL }}
+        run: python3 scripts/sync_calendar.py
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add workout-days.json
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Sync workout days from calendar"
+          git push
