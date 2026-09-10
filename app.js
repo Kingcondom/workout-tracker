@@ -33,13 +33,88 @@ function getNutritionTarget(date) {
   return phases[phases.length - 1];
 }
 
+// ===== Theme (kept in sync with style.css custom properties) =====
+const THEME = {
+  ink: '#14150f',
+  inkSoft: '#8b8d84',
+  inkFaint: '#b6b8ae',
+  line: '#eceee4',
+  surface2: '#f5f7ef',
+  lime: '#d8f34f',
+  limeDeep: '#a8c81f',
+  pink: '#f7cdee',
+  pinkDeepSoft: '#f0a8dc',
+  blue: '#8fd3ec',
+};
+
+// Vertical fade used under the weight line; needs the chart area, so it is
+// resolved lazily per render rather than built once up front.
+function areaGradient(context, topColor) {
+  const { ctx, chartArea } = context.chart;
+  if (!chartArea) return topColor;
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, topColor);
+  g.addColorStop(1, 'rgba(216,243,79,0)');
+  return g;
+}
+
+function tooltipStyle(labelFn) {
+  return {
+    backgroundColor: THEME.ink,
+    padding: 10,
+    cornerRadius: 10,
+    displayColors: false,
+    titleFont: { size: 11, weight: '500' },
+    bodyFont: { size: 12, weight: '600' },
+    callbacks: { label: labelFn },
+  };
+}
+
+const targetLinePlugin = {
+  id: 'targetLine',
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!scales.y || scales.y.max < 100) return;
+    const y = scales.y.getPixelForValue(100);
+    ctx.save();
+    ctx.strokeStyle = THEME.inkFaint;
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, y);
+    ctx.lineTo(chartArea.right, y);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
+const barValueLabelPlugin = {
+  id: 'barValueLabel',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.font = "600 11px Prompt, sans-serif";
+    ctx.fillStyle = THEME.ink;
+    ctx.textAlign = 'center';
+    meta.data.forEach((bar, i) => {
+      const value = chart.data.datasets[0].data[i];
+      if (value == null) return;
+      ctx.fillText(`${value}%`, bar.x, bar.y - 7);
+    });
+    ctx.restore();
+  },
+};
+
 // ===== State =====
 let dailyRecords = [];   // [{date, weight, isWorkout, workoutTypes:[], steps, caloriesIn, protein, carb, fat}], sorted ascending
 let colIndex = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1 };
 let stepColumnExists = false;
 let weightChart = null;
 let stepsChart = null;
+let calPctChart = null;
 let calendarCursor = new Date();       // month currently shown in calendar
+let weekCursor = new Date();           // week currently shown in the % chart
 let pollTimer = null;
 
 // ===== Gviz fetch (script-tag JSONP technique, avoids CORS entirely) =====
@@ -270,22 +345,25 @@ function computeTrend() {
 
 function renderTrend() {
   const badge = document.getElementById('trend-badge');
+  const latestEl = document.getElementById('weight-latest');
   const trend = computeTrend();
   if (!trend) {
     badge.className = 'trend-badge flat';
     badge.textContent = 'ยังไม่มีข้อมูลน้ำหนักพอสำหรับวิเคราะห์เทรนด์';
+    latestEl.textContent = '–';
     return;
   }
+  latestEl.textContent = trend.latest.toFixed(1);
   badge.className = `trend-badge ${trend.direction}`;
   const arrow = trend.direction === 'down' ? '↓' : trend.direction === 'up' ? '↑' : '→';
   const absDiff = Math.abs(trend.diff).toFixed(1);
   const label =
     trend.direction === 'down'
-      ? `น้ำหนักลดลง ${absDiff} กก. ในช่วง ${trend.days} วันที่ผ่านมา`
+      ? `ลดลง ${absDiff} กก. ใน ${trend.days} วัน`
       : trend.direction === 'up'
-      ? `น้ำหนักเพิ่มขึ้น ${absDiff} กก. ในช่วง ${trend.days} วันที่ผ่านมา`
-      : `น้ำหนักค่อนข้างคงที่ในช่วง ${trend.days} วันที่ผ่านมา`;
-  badge.textContent = `${arrow} ${label} (ล่าสุด ${trend.latest.toFixed(1)} กก.)`;
+      ? `เพิ่มขึ้น ${absDiff} กก. ใน ${trend.days} วัน`
+      : `คงที่ในช่วง ${trend.days} วัน`;
+  badge.textContent = `${arrow} ${label}`;
 }
 
 function renderWeightChart() {
@@ -308,24 +386,123 @@ function renderWeightChart() {
       datasets: [{
         label: 'น้ำหนัก (กก.)',
         data: values,
-        borderColor: '#a6792c',
-        backgroundColor: 'rgba(217,173,79,0.25)',
-        pointBackgroundColor: '#a6792c',
-        tension: 0.3,
+        borderColor: THEME.ink,
+        borderWidth: 2.5,
+        backgroundColor: (c) => areaGradient(c, 'rgba(216,243,79,0.55)'),
+        pointBackgroundColor: THEME.ink,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        tension: 0.4,
         fill: true,
-        pointRadius: 3,
+        pointRadius: (c) => (c.dataIndex === c.dataset.data.length - 1 ? 6 : 0),
+        pointHoverRadius: 6,
       }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: tooltipStyle((item) => `${item.parsed.y.toFixed(1)} กก.`),
+      },
       scales: {
-        y: { ticks: { color: '#6b5236' }, grid: { color: 'rgba(107,82,54,0.1)' } },
-        x: { ticks: { color: '#6b5236', maxRotation: 0, autoSkip: true }, grid: { display: false } },
+        y: {
+          ticks: { color: THEME.inkFaint, font: { size: 11 } },
+          grid: { color: THEME.line, drawTicks: false },
+          border: { display: false },
+        },
+        x: {
+          ticks: { color: THEME.inkFaint, maxRotation: 0, autoSkip: true, font: { size: 11 } },
+          grid: { display: false },
+          border: { display: false },
+        },
       },
     },
   });
+}
+
+// ===== Weekly calories-vs-target (%) =====
+function startOfWeek(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  d.setDate(d.getDate() - d.getDay()); // Sunday-first, matching the calendar page
+  return d;
+}
+
+function barColorForPct(pct) {
+  if (pct == null) return THEME.surface2;
+  if (pct < 90) return THEME.blue;
+  if (pct <= 110) return THEME.lime;
+  return THEME.pinkDeepSoft;
+}
+
+function renderCaloriePercentChart() {
+  const start = startOfWeek(weekCursor);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    return d;
+  });
+
+  const recordMap = new Map(dailyRecords.map((r) => [dateKey(r.date), r]));
+  const pcts = days.map((d) => {
+    const rec = recordMap.get(dateKey(d));
+    if (!rec || !rec.caloriesIn) return null;
+    const target = getNutritionTarget(d);
+    return Math.round((rec.caloriesIn / target.calories) * 100);
+  });
+
+  const endOfWeek = days[6];
+  document.getElementById('week-label').textContent =
+    `${start.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} – ${endOfWeek.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}`;
+
+  const labels = days.map((d, i) => `${DOW_TH[i]} ${d.getDate()}`);
+  const colors = pcts.map(barColorForPct);
+  const maxPct = Math.max(120, ...pcts.filter((p) => p != null));
+
+  if (calPctChart) {
+    calPctChart.data.labels = labels;
+    calPctChart.data.datasets[0].data = pcts;
+    calPctChart.data.datasets[0].backgroundColor = colors;
+    calPctChart.options.scales.y.max = Math.ceil((maxPct + 15) / 10) * 10;
+    calPctChart.update();
+    return;
+  }
+
+  calPctChart = new Chart(document.getElementById('calpct-chart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: '% ของเป้าหมาย', data: pcts, backgroundColor: colors, borderRadius: 10, borderSkipped: false, maxBarThickness: 34 }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: tooltipStyle((item) => `${item.parsed.y}% ของเป้าหมาย`),
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: Math.ceil((maxPct + 15) / 10) * 10,
+          ticks: { color: THEME.inkFaint, font: { size: 11 }, callback: (v) => `${v}%` },
+          grid: { color: THEME.line, drawTicks: false },
+          border: { display: false },
+        },
+        x: {
+          ticks: { color: THEME.inkFaint, font: { size: 11 } },
+          grid: { display: false },
+          border: { display: false },
+        },
+      },
+    },
+    plugins: [targetLinePlugin, barValueLabelPlugin],
+  });
+}
+
+function changeWeek(delta) {
+  weekCursor = new Date(weekCursor.getFullYear(), weekCursor.getMonth(), weekCursor.getDate() + delta * 7);
+  renderCaloriePercentChart();
 }
 
 function renderHomeWorkoutCalendar() {
@@ -483,28 +660,61 @@ function renderStepsCard() {
       datasets: [{
         label: 'Step',
         data: values,
-        backgroundColor: 'rgba(92,58,34,0.75)',
-        borderRadius: 4,
+        backgroundColor: THEME.pink,
+        hoverBackgroundColor: THEME.pinkDeepSoft,
+        borderRadius: 8,
+        borderSkipped: false,
+        maxBarThickness: 22,
       }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: tooltipStyle((item) => `${item.parsed.y.toLocaleString('th-TH')} ก้าว`),
+      },
       scales: {
-        y: { ticks: { color: '#6b5236' }, grid: { color: 'rgba(107,82,54,0.1)' } },
-        x: { ticks: { color: '#6b5236', maxRotation: 0, autoSkip: true }, grid: { display: false } },
+        y: {
+          ticks: { color: THEME.inkFaint, font: { size: 11 } },
+          grid: { color: THEME.line, drawTicks: false },
+          border: { display: false },
+        },
+        x: {
+          ticks: { color: THEME.inkFaint, maxRotation: 0, autoSkip: true, font: { size: 11 } },
+          grid: { display: false },
+          border: { display: false },
+        },
       },
     },
   });
 }
 
+function renderStatTiles() {
+  const now = new Date();
+  const monthCount = dailyRecords.filter(
+    (d) => d.isWorkout && d.date.getFullYear() === now.getFullYear() && d.date.getMonth() === now.getMonth()
+  ).length;
+  document.getElementById('tile-workout').textContent = `${monthCount} วัน`;
+
+  const latest = [...dailyRecords].reverse().find((d) => d.caloriesIn > 0);
+  const pctEl = document.getElementById('tile-calpct');
+  if (!latest) {
+    pctEl.textContent = '–';
+    return;
+  }
+  const pct = Math.round((latest.caloriesIn / getNutritionTarget(latest.date).calories) * 100);
+  pctEl.textContent = `${pct}%`;
+}
+
 function renderHome() {
   renderTrend();
   renderWeightChart();
+  renderCaloriePercentChart();
   renderHomeWorkoutCalendar();
   renderCaloriesCard();
   renderStepsCard();
+  renderStatTiles();
 }
 
 // ===== Render: Calendar =====
@@ -599,11 +809,30 @@ function initNav() {
   showPage(['home', 'calendar', 'photos'].includes(initial) ? initial : 'home');
 }
 
+function renderAppHeader() {
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting =
+    hour < 12 ? 'สวัสดีตอนเช้า ☀️' : hour < 18 ? 'สวัสดีตอนบ่าย 🌤️' : 'สวัสดีตอนค่ำ 🌙';
+  document.getElementById('greet-line').textContent = greeting;
+  document.getElementById('today-pill').textContent = now.toLocaleDateString('th-TH', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
+  Chart.defaults.font.family = "'Prompt', sans-serif";
+  Chart.defaults.color = THEME.inkSoft;
+
+  renderAppHeader();
   initNav();
   document.getElementById('cal-prev').addEventListener('click', () => changeMonth(-1));
   document.getElementById('cal-next').addEventListener('click', () => changeMonth(1));
+  document.getElementById('week-prev').addEventListener('click', () => changeWeek(-1));
+  document.getElementById('week-next').addEventListener('click', () => changeWeek(1));
   document.getElementById('refresh-btn').addEventListener('click', loadData);
   document.getElementById('cal-target-row').addEventListener('click', () => openMacroPopup('target'));
   document.getElementById('cal-in-row').addEventListener('click', () => openMacroPopup('intake'));

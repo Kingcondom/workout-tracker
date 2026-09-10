@@ -5,32 +5,76 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Workout Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<nav class="topnav">
-  <div class="brand">🪵 Workout Tracker</div>
-  <button class="nav-btn" data-page="home">Home</button>
-  <button class="nav-btn" data-page="calendar">Calendar workout</button>
-  <button class="nav-btn" data-page="photos">Body photo</button>
-</nav>
-
 <main>
+  <header class="app-header">
+    <div class="greeting">
+      <p class="greet-line" id="greet-line">สวัสดี</p>
+      <h1>Workout Tracker</h1>
+    </div>
+    <div class="today-pill" id="today-pill"></div>
+  </header>
+
+  <nav class="topnav">
+    <button class="nav-btn" data-page="home"><span class="nav-ico">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-btn" data-page="calendar"><span class="nav-ico">📅</span><span class="nav-label">Calendar</span></button>
+    <button class="nav-btn" data-page="photos"><span class="nav-ico">📷</span><span class="nav-label">Body photo</span></button>
+  </nav>
+
   <div id="error-banner" class="error-banner" hidden></div>
 
   <!-- ===== Home ===== -->
   <section id="page-home" class="page">
-    <div class="card card-hero">
-      <h2><span class="icon">⚖️</span> น้ำหนักตัว</h2>
-      <div id="trend-badge" class="trend-badge flat">กำลังโหลดข้อมูล...</div>
+    <div class="stat-tiles">
+      <div class="stat-tile lime">
+        <div class="tile-ico">🏋️</div>
+        <div class="tile-label">ออกกำลังกายเดือนนี้</div>
+        <div class="tile-value" id="tile-workout">–</div>
+      </div>
+      <div class="stat-tile pink">
+        <div class="tile-ico">🔥</div>
+        <div class="tile-label">แคลเทียบเป้าหมาย</div>
+        <div class="tile-value" id="tile-calpct">–</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hero-top">
+        <div>
+          <h2><span class="icon">⚖️</span> น้ำหนักตัว</h2>
+          <div id="trend-badge" class="trend-badge flat">กำลังโหลดข้อมูล...</div>
+        </div>
+        <div class="hero-metric">
+          <div class="hero-num" id="weight-latest">–</div>
+          <div class="hero-unit">กก. ล่าสุด</div>
+        </div>
+      </div>
       <div class="chart-wrap"><canvas id="weight-chart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📊</span> แคลอรี่เทียบเป้าหมาย (%)</h2>
+      <div class="week-nav">
+        <button type="button" id="week-prev">‹</button>
+        <span class="week-label" id="week-label"></span>
+        <button type="button" id="week-next">›</button>
+      </div>
+      <div class="chart-wrap small"><canvas id="calpct-chart"></canvas></div>
+      <div class="legend-row">
+        <span><i class="legend-dot" style="background:#8fd3ec"></i> ต่ำกว่าเป้า</span>
+        <span><i class="legend-dot" style="background:#d8f34f"></i> ตามเป้า (90–110%)</span>
+        <span><i class="legend-dot" style="background:#f0a8dc"></i> เกินเป้า</span>
+      </div>
     </div>
 
     <div class="cards-row">
       <div class="card">
-        <h2><span class="icon">🏋️</span> วันที่ออกกำลังกาย</h2>
+        <h2><span class="icon">🗓️</span> วันที่ออกกำลังกาย</h2>
         <div id="home-cal-label" class="mini-cal-label"></div>
         <div id="home-cal-grid" class="mini-cal-grid"></div>
         <div id="home-cal-caption" class="mini-cal-caption"></div>
@@ -41,11 +85,11 @@
         <div class="diet-rows">
           <button type="button" class="diet-row" id="cal-target-row">
             <span class="diet-row-label">เป้าหมายแคล</span>
-            <span class="diet-row-value" id="cal-target-value">—</span>
+            <span class="diet-row-value" id="cal-target-value">–</span>
           </button>
           <button type="button" class="diet-row" id="cal-in-row">
             <span class="diet-row-label">แคลที่กินไป</span>
-            <span class="diet-row-value" id="cal-in-value">—</span>
+            <span class="diet-row-value" id="cal-in-value">–</span>
           </button>
         </div>
         <div class="calories-date" id="calories-date">กำลังโหลด...</div>
@@ -77,9 +121,9 @@
   <section id="page-photos" class="page">
     <div class="card">
       <h2><span class="icon">📷</span> Body Photo</h2>
-      <p style="color:var(--ink-soft); font-size:0.9rem;">
-        รูปจะถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้น (local storage) เนื่องจากเว็บนี้ไม่มี backend —
-        ไม่ซิงก์ข้ามอุปกรณ์ และไม่ถูกเขียนกลับไปที่ Google Sheet
+      <p class="note-text">
+        รูปเก็บไว้ในเบราว์เซอร์ที่เปิดหน้านี้เท่านั้น (IndexedDB) — ไม่ซิงก์ข้ามอุปกรณ์
+        และไม่ถูกเขียนกลับไปที่ Google Sheet
       </p>
       <div class="upload-zone">
         <div>เลือกวันที่ของรูป แล้วอัปโหลดได้เลย</div>
@@ -95,7 +139,7 @@
 
   <div class="status-line">
     <span id="status-text">กำลังโหลดข้อมูล...</span>
-    <button id="refresh-btn">รีเฟรชตอนนี้</button>
+    <button id="refresh-btn">รีเฟรช</button>
   </div>
 </main>
 

@@ -130,8 +130,8 @@ python3 -m http.server 8792 --bind 0.0.0.0
 ## ไฟล์ในโปรเจกต์
 
 - `index.html` — โครงหน้าเว็บทั้ง 3 หน้า (SPA, สลับหน้าด้วย JS ไม่รีโหลด)
-- `style.css` — ธีมกระดานไม้/กระดาษ
-- `app.js` — ดึง/แปลงข้อมูลจาก Sheet, กราฟน้ำหนัก+Step, ปฏิทิน, รวมข้อมูลวันออกกำลังกายจาก Calendar
+- `style.css` — ธีมการ์ดขาวโค้งมน โทนไลม์/ชมพู (บนมือถือแถบเมนูจะย้ายไปลอยด้านล่าง)
+- `app.js` — ดึง/แปลงข้อมูลจาก Sheet, กราฟน้ำหนัก, กราฟ % แคลอรี่รายสัปดาห์, กราฟ Step, ปฏิทิน, รวมข้อมูลวันออกกำลังกายจาก Calendar
 - `photos.js` — จัดการรูปภาพผ่าน IndexedDB
 - `workout-days.json` — ผลลัพธ์วันออกกำลังกายจาก Calendar (อัปเดตอัตโนมัติโดย GitHub Actions)
 - `scripts/sync_calendar.py` — ดึง ICS feed, กรอง event, ขยาย recurring event, เขียน `workout-days.json`
