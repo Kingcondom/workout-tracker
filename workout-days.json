@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-10T16:47:42.032247Z",
+  "generatedAt": "2026-09-10T17:08:46.721890Z",
   "keywords": [
     "upper",
     "push",
@@ -7,11 +7,41 @@
     "leg"
   ],
   "days": [
-    "2026-09-05",
-    "2026-09-09",
-    "2026-09-11",
-    "2026-09-12",
-    "2026-09-13",
-    "2027-01-04"
+    {
+      "date": "2026-09-05",
+      "titles": [
+        "🏋️ Day1: Push A (อก\\, ไหล่\\, หลังแขน)"
+      ]
+    },
+    {
+      "date": "2026-09-09",
+      "titles": [
+        "🏋️ Upper (Shoulders/Back/Chest/Arms)"
+      ]
+    },
+    {
+      "date": "2026-09-11",
+      "titles": [
+        "🏋️ Push (Chest/Shoulders/Triceps)"
+      ]
+    },
+    {
+      "date": "2026-09-12",
+      "titles": [
+        "🏋️ Pull (Back/Rear Delts/Biceps)"
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "titles": [
+        "🏋️ Legs (Quads/Hams/Glutes/Abs)"
+      ]
+    },
+    {
+      "date": "2027-01-04",
+      "titles": [
+        "🏁 Phase 3 เริ่ม: Final Push"
+      ]
+    }
   ]
 }
