@@ -116,24 +116,28 @@ def main():
     lines = unfold_ics(text)
     events = parse_vevents(lines)
 
-    workout_days = set()
+    days_map = {}
     for ev in events:
-        if not matches_keywords(ev.get("summary")):
+        summary = (ev.get("summary") or "").strip()
+        if not matches_keywords(summary):
             continue
         for d in expand_dates(ev):
-            workout_days.add(d.isoformat())
+            days_map.setdefault(d.isoformat(), set()).add(summary)
 
     result = {
         "generatedAt": datetime.utcnow().isoformat() + "Z",
         "keywords": KEYWORDS,
-        "days": sorted(workout_days),
+        "days": [
+            {"date": day, "titles": sorted(t for t in titles if t)}
+            for day, titles in sorted(days_map.items())
+        ],
     }
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
-    print(f"Wrote {len(workout_days)} workout day(s) to {OUTPUT_PATH}")
+    print(f"Wrote {len(days_map)} workout day(s) to {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

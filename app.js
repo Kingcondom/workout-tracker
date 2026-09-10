@@ -263,7 +263,12 @@ function applyCalendarWorkoutDays(calendarData) {
 
   const map = new Map(dailyRecords.map((r) => [dateKey(r.date), r]));
   calendarData.days.forEach((entry) => {
-    const [y, m, d] = entry.date.split('-').map(Number);
+    // Older syncs wrote plain "YYYY-MM-DD" strings; newer ones write
+    // { date, titles }. Accept both so a stale file can't break the page.
+    const iso = typeof entry === 'string' ? entry : entry.date;
+    const titles = typeof entry === 'string' ? [] : entry.titles || [];
+    if (!iso) return;
+    const [y, m, d] = iso.split('-').map(Number);
     const date = new Date(y, m - 1, d);
     const key = dateKey(date);
     let rec = map.get(key);
@@ -273,7 +278,7 @@ function applyCalendarWorkoutDays(calendarData) {
       map.set(key, rec);
     }
     rec.isWorkout = true;
-    rec.workoutTypes = entry.titles || [];
+    rec.workoutTypes = titles;
   });
   dailyRecords.sort((a, b) => a.date - b.date);
 }
