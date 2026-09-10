@@ -189,7 +189,7 @@ function aggregateByDay(table, idx) {
     const key = dateKey(date);
 
     if (!map.has(key)) {
-      map.set(key, { date, weight: null, isWorkout: false, workoutTypes: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0 });
+      map.set(key, { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0 });
     }
     const rec = map.get(key);
 
@@ -235,10 +235,15 @@ function aggregateByDay(table, idx) {
   return Array.from(map.values()).sort((a, b) => a.date - b.date);
 }
 
-// ===== Calendar-derived workout days (replaces the Sheet's workout column) =====
-// Populated by .github/workflows/sync-calendar.yml every ~3 days from a
-// public Google Calendar ICS feed (see scripts/sync_calendar.py). Fetched
-// same-origin as a static JSON file to avoid Google's ICS CORS restrictions.
+// ===== Planned workouts, from Google Calendar =====
+// Two different things are tracked per day, and they must not overwrite
+// each other: `isWorkout` is what actually happened (logged in the Sheet),
+// while `plannedTitles` is what was scheduled (events in Google Calendar,
+// which can be in the future).
+//
+// Populated by .github/workflows/sync-calendar.yml every ~3 days from an
+// ICS feed (see scripts/sync_calendar.py). Fetched same-origin as a static
+// JSON file to avoid Google's ICS CORS restrictions.
 async function fetchCalendarWorkoutDays() {
   try {
     const res = await fetch(`workout-days.json?_=${Date.now()}`, { cache: 'no-store' });
@@ -249,17 +254,8 @@ async function fetchCalendarWorkoutDays() {
   }
 }
 
-function applyCalendarWorkoutDays(calendarData) {
-  // Calendar data is meant to fully replace the Sheet's "ออกกำลังกาย" column,
-  // but until the sync has actually produced at least one day, keep using
-  // the Sheet so the app isn't left showing zero workout days.
-  const hasCalendarData = calendarData && Array.isArray(calendarData.days) && calendarData.days.length > 0;
-  if (!hasCalendarData) return;
-
-  dailyRecords.forEach((r) => {
-    r.isWorkout = false;
-    r.workoutTypes = [];
-  });
+function applyPlannedWorkouts(calendarData) {
+  if (!calendarData || !Array.isArray(calendarData.days)) return;
 
   const map = new Map(dailyRecords.map((r) => [dateKey(r.date), r]));
   calendarData.days.forEach((entry) => {
@@ -273,12 +269,12 @@ function applyCalendarWorkoutDays(calendarData) {
     const key = dateKey(date);
     let rec = map.get(key);
     if (!rec) {
-      rec = { date, weight: null, isWorkout: false, workoutTypes: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0 };
+      // A planned day with no Sheet activity yet (typically in the future).
+      rec = { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0 };
       dailyRecords.push(rec);
       map.set(key, rec);
     }
-    rec.isWorkout = true;
-    rec.workoutTypes = titles;
+    rec.plannedTitles = titles;
   });
   dailyRecords.sort((a, b) => a.date - b.date);
 }
@@ -295,7 +291,7 @@ async function loadData() {
     colIndex = buildColumnIndex(table.cols || []);
     stepColumnExists = colIndex.step !== -1;
     dailyRecords = aggregateByDay(table, colIndex);
-    applyCalendarWorkoutDays(calendarData);
+    applyPlannedWorkouts(calendarData);
     hideError();
     renderAll();
     setStatus(`อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')}`);
@@ -756,15 +752,16 @@ function renderCalendar() {
     const d = new Date(year, month, day);
     const key = dateKey(d);
     const rec = recordMap.get(key);
+    const planned = rec && rec.plannedTitles && rec.plannedTitles.length > 0;
     const el = document.createElement('div');
     el.className = 'cal-day';
     if (key === todayKey) el.classList.add('today');
-    if (rec && rec.isWorkout) el.classList.add('workout');
+    if (planned) el.classList.add('planned');
     if (rec) el.classList.add('clickable');
 
     let html = `<div class="daynum">${day}</div>`;
-    if (rec && rec.isWorkout) html += `<div class="dumbbell">🏋️</div>`;
-    if (rec && rec.weight != null) html += `<span class="weight-tag">${rec.weight.toFixed(1)} กก.</span>`;
+    if (rec && rec.isWorkout) html += `<div class="dumbbell" title="ทำจริงแล้ว">🏋️</div>`;
+    if (planned) html += `<span class="plan-tag">${rec.plannedTitles.join(', ')}</span>`;
     el.innerHTML = html;
 
     if (rec) {
@@ -777,9 +774,11 @@ function renderCalendar() {
 function showDayDetail(rec) {
   const el = document.getElementById('day-detail');
   const dateLabel = rec.date.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const planned = rec.plannedTitles && rec.plannedTitles.length > 0;
   let html = `<h3>${dateLabel}</h3>`;
+  html += `<p><strong>แผนที่วางไว้:</strong> ${planned ? '📋 ' + rec.plannedTitles.join(', ') : 'ไม่ได้วางแผนไว้'}</p>`;
+  html += `<p><strong>ทำจริง:</strong> ${rec.isWorkout ? '✅ ' + rec.workoutTypes.join(', ') : 'ไม่มีบันทึก'}</p>`;
   html += `<p><strong>น้ำหนัก:</strong> ${rec.weight != null ? rec.weight.toFixed(1) + ' กก.' : '—'}</p>`;
-  html += `<p><strong>ออกกำลังกาย:</strong> ${rec.isWorkout ? '✅ ' + rec.workoutTypes.join(', ') : 'ไม่มีบันทึก'}</p>`;
   if (stepColumnExists) {
     html += `<p><strong>Step:</strong> ${rec.steps != null ? rec.steps.toLocaleString('th-TH') : '—'}</p>`;
   }
