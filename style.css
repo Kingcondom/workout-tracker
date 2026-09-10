@@ -352,6 +352,43 @@ main {
   margin-top: 12px;
 }
 
+/* ===== Mood ===== */
+
+.mood-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mood-cell { text-align: center; }
+
+.mood-cell span {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.mood-face {
+  aspect-ratio: 1 / 1;
+  max-width: 76px;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.mood-1 { background: #f9b3ab; }
+.mood-2 { background: #fbd0c8; }
+.mood-3 { background: var(--blue-soft); }
+.mood-4 { background: var(--lime-soft); }
+.mood-5 { background: var(--lime); }
+.mood-empty { background: var(--surface-2); color: var(--ink-faint); font-size: 1rem; }
+
 /* ===== Nutrition card ===== */
 
 .diet-rows {

@@ -108,7 +108,7 @@ const barValueLabelPlugin = {
 
 // ===== State =====
 let dailyRecords = [];   // [{date, weight, isWorkout, workoutTypes:[], steps, caloriesIn, protein, carb, fat}], sorted ascending
-let colIndex = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1 };
+let colIndex = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1, mood: -1 };
 let stepColumnExists = false;
 let weightChart = null;
 let stepsChart = null;
@@ -150,7 +150,7 @@ function fetchGvizTable() {
 
 // ===== Parsing =====
 function buildColumnIndex(cols) {
-  const idx = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1 };
+  const idx = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1, mood: -1 };
   cols.forEach((col, i) => {
     const label = (col.label || '').toLowerCase();
     if (idx.date === -1 && col.type === 'date') idx.date = i;
@@ -163,6 +163,7 @@ function buildColumnIndex(cols) {
     if (idx.protein === -1 && (label.includes('โปรตีน') || label.includes('protein'))) idx.protein = i;
     if (idx.carb === -1 && (label.includes('คาร์บ') || label.includes('carb'))) idx.carb = i;
     if (idx.fat === -1 && (label.includes('ไขมัน') || label.includes('fat'))) idx.fat = i;
+    if (idx.mood === -1 && (label.includes('mood') || label.includes('อารมณ์'))) idx.mood = i;
   });
   return idx;
 }
@@ -189,7 +190,7 @@ function aggregateByDay(table, idx) {
     const key = dateKey(date);
 
     if (!map.has(key)) {
-      map.set(key, { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0 });
+      map.set(key, { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0, mood: null });
     }
     const rec = map.get(key);
 
@@ -210,6 +211,11 @@ function aggregateByDay(table, idx) {
       const c = cells[idx.step];
       const val = c ? c.v : null;
       if (rec.steps == null && typeof val === 'number' && val > 0) rec.steps = val;
+    }
+    if (idx.mood !== -1) {
+      const c = cells[idx.mood];
+      const val = c ? c.v : null;
+      if (rec.mood == null && typeof val === 'number' && val > 0) rec.mood = val;
     }
     if (idx.caloriesIn !== -1) {
       const c = cells[idx.caloriesIn];
@@ -270,7 +276,7 @@ function applyPlannedWorkouts(calendarData) {
     let rec = map.get(key);
     if (!rec) {
       // A planned day with no Sheet activity yet (typically in the future).
-      rec = { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0 };
+      rec = { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0, mood: null };
       dailyRecords.push(rec);
       map.set(key, rec);
     }
@@ -691,6 +697,39 @@ function renderStepsCard() {
   });
 }
 
+// Mood is stored 1–5; a sheet using a 1–10 scale is mapped down so both work.
+const MOOD_FACES = ['😠', '😣', '😐', '🙂', '😄'];
+
+function moodLevel(value) {
+  if (value == null) return null;
+  const scaled = value > 5 ? Math.round(value / 2) : Math.round(value);
+  return Math.min(5, Math.max(1, scaled));
+}
+
+function renderMoodCard() {
+  const wrap = document.getElementById('mood-body');
+  if (colIndex.mood === -1) {
+    wrap.innerHTML = `<div class="placeholder-note">ยังไม่มีคอลัมน์ Mood ใน Sheet<br>เพิ่มคอลัมน์ที่หัวตารางมีคำว่า "Mood" หรือ "อารมณ์" แล้วกรอกคะแนน 1–5 (หรือ 1–10) ของแต่ละเช้า การ์ดนี้จะขึ้นให้เอง</div>`;
+    return;
+  }
+
+  const recordMap = new Map(dailyRecords.map((r) => [dateKey(r.date), r]));
+  const today = new Date();
+  const cells = [];
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    const rec = recordMap.get(dateKey(d));
+    const level = moodLevel(rec ? rec.mood : null);
+    const dow = DOW_TH[d.getDay()];
+    cells.push(
+      level
+        ? `<div class="mood-cell"><div class="mood-face mood-${level}">${MOOD_FACES[level - 1]}</div><span>${dow}</span></div>`
+        : `<div class="mood-cell"><div class="mood-face mood-empty">–</div><span>${dow}</span></div>`
+    );
+  }
+  wrap.innerHTML = `<div class="mood-row">${cells.join('')}</div>`;
+}
+
 function renderStatTiles() {
   const now = new Date();
   const monthCount = dailyRecords.filter(
@@ -709,6 +748,7 @@ function renderStatTiles() {
 }
 
 function renderHome() {
+  renderMoodCard();
   renderTrend();
   renderWeightChart();
   renderCaloriePercentChart();
