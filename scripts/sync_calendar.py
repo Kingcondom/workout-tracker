@@ -1,26 +1,50 @@
 #!/usr/bin/env python3
 """
-Pulls a public Google Calendar ICS feed, keeps only events whose title
-matches a workout-split keyword (Upper/Push/Pull/Leg), expands recurring
-events, and writes the resulting dates to workout-days.json for the
-frontend to fetch (same-origin, no CORS issues).
+Pulls a Google Calendar ICS feed and writes workout-days.json for the
+frontend to fetch (same-origin, so no CORS issues).
+
+Two things are produced:
+
+  days     - planned workout days, with the event title, for the calendar
+             page. Titles here are gym splits (Push/Pull/Leg) only.
+  schedule - every event in a window around today, reduced to a CATEGORY
+             and a TIME. Event titles are deliberately NOT written here:
+             this file is published in a public repo, so the calendar's
+             contents must not leak. Only "there was a class 08:00-16:00"
+             is exposed, never what the event was called.
 
 Requires: CALENDAR_ICS_URL env var (kept as a GitHub Actions secret, never
 printed to logs).
 """
 import json
 import os
-import re
 import sys
 import urllib.request
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from dateutil.rrule import rrulestr
 
+# Gym splits that count as a planned workout day.
 KEYWORDS = ["upper", "push", "pull", "leg"]
+
+# Checked in order, so put the more specific category first (an exam is
+# not a lecture even though both are school).
+CATEGORIES = [
+    ("exam", "📝", "สอบ", ["สอบ", "exam", "quiz", "midterm", "final", "osce"]),
+    ("class", "📚", "เรียน", ["เรียน", "lecture", "class", "บรรยาย", "lab", "ปฏิบัติการ", "ติว"]),
+    ("ward", "🏥", "วอร์ด", ["ward", "วอร์ด", "round", "ราวด์", "เวร", "opd", "รพ.", "ผู้ป่วย", "คลินิก"]),
+    ("workout", "🏋️", "ออกกำลังกาย", KEYWORDS + ["gym", "ยิม", "ออกกำลังกาย", "เวท", "วิ่ง", "ว่ายน้ำ"]),
+    ("meeting", "💼", "ประชุม", ["meeting", "ประชุม", "นัด", "appointment"]),
+]
+OTHER_CATEGORY = ("other", "📌", "อื่นๆ")
+
+LOCAL_TZ = ZoneInfo("Asia/Bangkok")
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "..", "workout-days.json")
-LOOKAHEAD_DAYS = 30  # how far past "today" to still count a recurring occurrence
-MAX_HISTORY_YEARS = 3  # don't expand recurrences further back than this
+LOOKAHEAD_DAYS = 30      # how far past today a recurring workout still counts
+MAX_HISTORY_YEARS = 3    # don't expand recurrences further back than this
+SCHEDULE_BACK_DAYS = 7   # window written to `schedule`
+SCHEDULE_AHEAD_DAYS = 14
 
 
 def unfold_ics(text):
@@ -34,12 +58,17 @@ def unfold_ics(text):
     return unfolded
 
 
-def parse_ics_date(value, params):
+def parse_ics_moment(value, params):
+    """Returns (date, "HH:MM" or None). None means an all-day event."""
     value = value.strip()
     if "VALUE=DATE" in params or (len(value) == 8 and "T" not in value):
-        return datetime.strptime(value, "%Y%m%d").date()
-    value = value.split("Z")[0]
-    return datetime.strptime(value[:15], "%Y%m%dT%H%M%S").date()
+        return datetime.strptime(value, "%Y%m%d").date(), None
+
+    is_utc = value.endswith("Z")
+    dt = datetime.strptime(value.rstrip("Z")[:15], "%Y%m%dT%H%M%S")
+    if is_utc:
+        dt = dt.replace(tzinfo=timezone.utc).astimezone(LOCAL_TZ)
+    return dt.date(), dt.strftime("%H:%M")
 
 
 def parse_vevents(lines):
@@ -62,6 +91,9 @@ def parse_vevents(lines):
             elif key == "DTSTART":
                 current["dtstart_raw"] = value
                 current["dtstart_params"] = params
+            elif key == "DTEND":
+                current["dtend_raw"] = value
+                current["dtend_params"] = params
             elif key == "RRULE":
                 current["rrule"] = value.strip()
             elif key == "EXDATE":
@@ -74,31 +106,41 @@ def matches_keywords(summary):
     return any(k in s for k in KEYWORDS)
 
 
+def categorize(summary):
+    s = (summary or "").lower()
+    for _, emoji, label, words in CATEGORIES:
+        if any(w in s for w in words):
+            return emoji, label
+    return OTHER_CATEGORY[1], OTHER_CATEGORY[2]
+
+
 def expand_dates(ev):
     if "dtstart_raw" not in ev:
         return []
-    dtstart_date = parse_ics_date(ev["dtstart_raw"], ev.get("dtstart_params", []))
-    dtstart_dt = datetime(dtstart_date.year, dtstart_date.month, dtstart_date.day)
+    start_date, _ = parse_ics_moment(ev["dtstart_raw"], ev.get("dtstart_params", []))
+    dtstart_dt = datetime(start_date.year, start_date.month, start_date.day)
 
     if "rrule" not in ev:
-        return [dtstart_date]
+        return [start_date]
 
     exdates = set()
     for raw, params in ev.get("exdate_raw", []):
         for part in raw.split(","):
             try:
-                exdates.add(parse_ics_date(part, params))
+                exdates.add(parse_ics_moment(part, params)[0])
             except ValueError:
                 continue
 
     horizon = datetime.combine(date.today() + timedelta(days=LOOKAHEAD_DAYS), datetime.min.time())
-    floor = datetime.combine(date.today().replace(year=date.today().year - MAX_HISTORY_YEARS), datetime.min.time())
+    floor = datetime.combine(
+        date.today().replace(year=date.today().year - MAX_HISTORY_YEARS), datetime.min.time()
+    )
     try:
         rule = rrulestr(f"RRULE:{ev['rrule']}", dtstart=max(dtstart_dt, floor))
         occurrences = rule.between(floor, horizon, inc=True)
     except Exception as exc:
         print(f"warning: failed to expand RRULE for an event: {exc}", file=sys.stderr)
-        return [dtstart_date]
+        return [start_date]
 
     return [dt.date() for dt in occurrences if dt.date() not in exdates]
 
@@ -113,31 +155,53 @@ def main():
     with urllib.request.urlopen(req, timeout=30) as resp:
         text = resp.read().decode("utf-8", errors="replace")
 
-    lines = unfold_ics(text)
-    events = parse_vevents(lines)
+    events = parse_vevents(unfold_ics(text))
 
-    days_map = {}
+    window_start = date.today() - timedelta(days=SCHEDULE_BACK_DAYS)
+    window_end = date.today() + timedelta(days=SCHEDULE_AHEAD_DAYS)
+
+    workout_days = {}
+    schedule = {}
+
     for ev in events:
         summary = (ev.get("summary") or "").strip()
-        if not matches_keywords(summary):
+        occurrences = expand_dates(ev)
+        if not occurrences:
             continue
-        for d in expand_dates(ev):
-            days_map.setdefault(d.isoformat(), set()).add(summary)
+
+        _, start_time = parse_ics_moment(ev["dtstart_raw"], ev.get("dtstart_params", []))
+        end_time = None
+        if "dtend_raw" in ev:
+            _, end_time = parse_ics_moment(ev["dtend_raw"], ev.get("dtend_params", []))
+        emoji, label = categorize(summary)
+
+        for day in occurrences:
+            if matches_keywords(summary):
+                workout_days.setdefault(day.isoformat(), set()).add(summary)
+            if window_start <= day <= window_end:
+                item = {"emoji": emoji, "label": label, "start": start_time, "end": end_time}
+                items = schedule.setdefault(day.isoformat(), [])
+                if item not in items:
+                    items.append(item)
+
+    for items in schedule.values():
+        items.sort(key=lambda i: i["start"] or "")
 
     result = {
-        "generatedAt": datetime.utcnow().isoformat() + "Z",
+        "generatedAt": datetime.now(timezone.utc).isoformat(),
         "keywords": KEYWORDS,
         "days": [
             {"date": day, "titles": sorted(t for t in titles if t)}
-            for day, titles in sorted(days_map.items())
+            for day, titles in sorted(workout_days.items())
         ],
+        "schedule": [{"date": day, "items": items} for day, items in sorted(schedule.items())],
     }
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
-    print(f"Wrote {len(days_map)} workout day(s) to {OUTPUT_PATH}")
+    print(f"Wrote {len(workout_days)} workout day(s) and {len(schedule)} scheduled day(s)")
 
 
 if __name__ == "__main__":

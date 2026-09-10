@@ -352,6 +352,44 @@ main {
   margin-top: 12px;
 }
 
+/* ===== Today's schedule ===== */
+
+.sched-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.sched-chip {
+  flex: 0 0 auto;
+  text-align: center;
+  min-width: 84px;
+}
+
+.sched-ico {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.sched-label { font-size: 0.78rem; font-weight: 600; }
+.sched-time { font-size: 0.7rem; color: var(--ink-soft); margin-top: 1px; }
+
+.cal-day .sched-emojis {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+}
+
 /* ===== Mood ===== */
 
 .mood-row {

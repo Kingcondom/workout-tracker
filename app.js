@@ -115,6 +115,7 @@ let stepsChart = null;
 let calPctChart = null;
 let calendarCursor = new Date();       // month currently shown in calendar
 let weekCursor = new Date();           // week currently shown in the % chart
+let scheduleByDate = new Map();  // 'YYYY-MM-DD' -> [{emoji,label,start,end}]
 let pollTimer = null;
 
 // ===== Gviz fetch (script-tag JSONP technique, avoids CORS entirely) =====
@@ -260,6 +261,14 @@ async function fetchCalendarWorkoutDays() {
   }
 }
 
+function applyScheduleData(calendarData) {
+  scheduleByDate = new Map();
+  if (!calendarData || !Array.isArray(calendarData.schedule)) return;
+  calendarData.schedule.forEach((entry) => {
+    if (entry && entry.date) scheduleByDate.set(entry.date, entry.items || []);
+  });
+}
+
 function applyPlannedWorkouts(calendarData) {
   if (!calendarData || !Array.isArray(calendarData.days)) return;
 
@@ -298,6 +307,7 @@ async function loadData() {
     stepColumnExists = colIndex.step !== -1;
     dailyRecords = aggregateByDay(table, colIndex);
     applyPlannedWorkouts(calendarData);
+    applyScheduleData(calendarData);
     hideError();
     renderAll();
     setStatus(`อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH')}`);
@@ -697,6 +707,29 @@ function renderStepsCard() {
   });
 }
 
+function formatScheduleTime(item) {
+  if (!item.start) return 'ทั้งวัน';
+  return item.end ? `${item.start}–${item.end}` : item.start;
+}
+
+function renderTodaySchedule() {
+  const wrap = document.getElementById('schedule-body');
+  const items = scheduleByDate.get(dateKey(new Date())) || [];
+  if (items.length === 0) {
+    wrap.innerHTML = `<div class="placeholder-note">วันนี้ไม่มีนัดในปฏิทิน (หรือยังไม่ได้ตั้งค่า Calendar sync)</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="sched-row">${items
+    .map(
+      (it) => `<div class="sched-chip">
+        <div class="sched-ico">${it.emoji}</div>
+        <div class="sched-label">${it.label}</div>
+        <div class="sched-time">${formatScheduleTime(it)}</div>
+      </div>`
+    )
+    .join('')}</div>`;
+}
+
 // Mood is stored 1–5; a sheet using a 1–10 scale is mapped down so both work.
 const MOOD_FACES = ['😠', '😣', '😐', '🙂', '😄'];
 
@@ -748,6 +781,7 @@ function renderStatTiles() {
 }
 
 function renderHome() {
+  renderTodaySchedule();
   renderMoodCard();
   renderTrend();
   renderWeightChart();
@@ -801,6 +835,11 @@ function renderCalendar() {
 
     let html = `<div class="daynum">${day}</div>`;
     if (rec && rec.isWorkout) html += `<div class="dumbbell" title="ทำจริงแล้ว">🏋️</div>`;
+    const sched = scheduleByDate.get(key) || [];
+    if (sched.length > 0) {
+      const emojis = [...new Set(sched.map((s) => s.emoji))].join('');
+      html += `<span class="sched-emojis" title="${sched.map((s) => `${s.label} ${formatScheduleTime(s)}`).join(', ')}">${emojis}</span>`;
+    }
     if (planned) html += `<span class="plan-tag">${rec.plannedTitles.join(', ')}</span>`;
     el.innerHTML = html;
 
