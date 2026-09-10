@@ -354,10 +354,23 @@ main {
 
 /* ===== Today's schedule ===== */
 
+.sched-group + .sched-group {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.sched-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-top: 12px;
+}
+
 .sched-row {
   display: flex;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 10px;
   overflow-x: auto;
   padding-bottom: 4px;
 }

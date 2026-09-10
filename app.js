@@ -216,7 +216,7 @@ function aggregateByDay(table, idx) {
     if (idx.mood !== -1) {
       const c = cells[idx.mood];
       const val = c ? c.v : null;
-      if (rec.mood == null && typeof val === 'number' && val > 0) rec.mood = val;
+      if (rec.mood == null && val != null && val !== '') rec.mood = val;
     }
     if (idx.caloriesIn !== -1) {
       const c = cells[idx.caloriesIn];
@@ -712,14 +712,9 @@ function formatScheduleTime(item) {
   return item.end ? `${item.start}–${item.end}` : item.start;
 }
 
-function renderTodaySchedule() {
-  const wrap = document.getElementById('schedule-body');
-  const items = scheduleByDate.get(dateKey(new Date())) || [];
-  if (items.length === 0) {
-    wrap.innerHTML = `<div class="placeholder-note">วันนี้ไม่มีนัดในปฏิทิน (หรือยังไม่ได้ตั้งค่า Calendar sync)</div>`;
-    return;
-  }
-  wrap.innerHTML = `<div class="sched-row">${items
+function scheduleGroupHtml(heading, items) {
+  if (items.length === 0) return '';
+  const chips = items
     .map(
       (it) => `<div class="sched-chip">
         <div class="sched-ico">${it.emoji}</div>
@@ -727,16 +722,63 @@ function renderTodaySchedule() {
         <div class="sched-time">${formatScheduleTime(it)}</div>
       </div>`
     )
-    .join('')}</div>`;
+    .join('');
+  return `<div class="sched-group"><div class="sched-heading">${heading}</div><div class="sched-row">${chips}</div></div>`;
 }
 
-// Mood is stored 1–5; a sheet using a 1–10 scale is mapped down so both work.
+function renderTodaySchedule() {
+  const wrap = document.getElementById('schedule-body');
+  const now = new Date();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const todayItems = scheduleByDate.get(dateKey(now)) || [];
+  const tomorrowItems = scheduleByDate.get(dateKey(tomorrow)) || [];
+
+  if (todayItems.length === 0 && tomorrowItems.length === 0) {
+    wrap.innerHTML = `<div class="placeholder-note">วันนี้และพรุ่งนี้ไม่มีนัดในปฏิทิน (หรือยังไม่ได้ตั้งค่า Calendar sync)</div>`;
+    return;
+  }
+  wrap.innerHTML =
+    scheduleGroupHtml('วันนี้', todayItems) + scheduleGroupHtml('พรุ่งนี้', tomorrowItems);
+}
+
 const MOOD_FACES = ['😠', '😣', '😐', '🙂', '😄'];
 
-function moodLevel(value) {
-  if (value == null) return null;
-  const scaled = value > 5 ? Math.round(value / 2) : Math.round(value);
-  return Math.min(5, Math.max(1, scaled));
+// Longest/most specific phrases first, so "ดีมาก" is not swallowed by "ดี".
+const MOOD_WORDS = [
+  [5, ['ดีมาก', 'สุดยอด', 'มีความสุข', 'สดใส', 'excellent', 'great', 'happy', 'amazing']],
+  [1, ['แย่มาก', 'เครียดมาก', 'หดหู่', 'awful', 'terrible', 'depressed']],
+  [2, ['ไม่ดี', 'เหนื่อย', 'เครียด', 'เพลีย', 'แย่', 'bad', 'tired', 'stressed']],
+  [3, ['เฉย', 'ปกติ', 'กลางๆ', 'โอเค', 'neutral', 'normal', 'okay', 'ok']],
+  [4, ['ดี', 'สดชื่น', 'good', 'fine']],
+];
+
+// The sheet column is free text, so accept 4, "4", "7/10" and words alike.
+function parseMoodLevel(value) {
+  if (typeof value === 'number') {
+    return clampMood(value > 5 ? value / 2 : value);
+  }
+  if (typeof value !== 'string') return null;
+  const text = value.trim().toLowerCase();
+  if (!text) return null;
+
+  const ratio = text.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  if (ratio) {
+    const denom = parseFloat(ratio[2]);
+    if (denom > 0) return clampMood((parseFloat(ratio[1]) / denom) * 5);
+  }
+  const plain = text.match(/^\d+(?:\.\d+)?$/);
+  if (plain) {
+    const n = parseFloat(plain[0]);
+    return clampMood(n > 5 ? n / 2 : n);
+  }
+  for (const [level, words] of MOOD_WORDS) {
+    if (words.some((w) => text.includes(w))) return level;
+  }
+  return null;
+}
+
+function clampMood(n) {
+  return Math.min(5, Math.max(1, Math.round(n)));
 }
 
 function renderMoodCard() {
@@ -752,7 +794,7 @@ function renderMoodCard() {
   for (let i = 4; i >= 0; i--) {
     const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
     const rec = recordMap.get(dateKey(d));
-    const level = moodLevel(rec ? rec.mood : null);
+    const level = parseMoodLevel(rec ? rec.mood : null);
     const dow = DOW_TH[d.getDay()];
     cells.push(
       level
