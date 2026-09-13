@@ -149,54 +149,73 @@ main {
 
 .cards-row .card { margin-bottom: 0; }
 
-/* ===== Stat tiles ===== */
+/* ===== Daily goal hero ===== */
 
-.stat-tiles {
+.goal-hero {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 16px;
+  grid-template-columns: 1fr auto;
+  gap: 8px 18px;
+  align-items: center;
+  background: #fbf6ef;
 }
 
-.stat-tile {
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  position: relative;
-  min-height: 108px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+.goal-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
 }
 
-.stat-tile.lime { background: var(--lime); }
-.stat-tile.pink { background: var(--pink); }
+.goal-pct {
+  font-size: 5rem;
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: #1f2a44;
+  margin: 6px 0 14px;
+}
 
-.tile-ico {
+.goal-pct small { font-size: 1.4rem; font-weight: 500; margin-left: 2px; color: var(--ink-soft); }
+
+.goal-metrics { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.goal-metrics li { display: flex; align-items: center; gap: 10px; }
+.gm-ico { font-size: 1.05rem; width: 22px; text-align: center; }
+.goal-metrics b { display: block; font-size: 1rem; font-weight: 600; line-height: 1.1; }
+.goal-metrics span { font-size: 0.72rem; color: var(--ink-soft); }
+
+.goal-ring-wrap { position: relative; width: 220px; height: 220px; }
+.goal-ring-wrap svg { width: 100%; height: 100%; }
+.goal-arc { transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1); }
+
+.goal-figure {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.65);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 3.2rem;
+  animation: goal-bob 2.4s ease-in-out infinite;
 }
 
-.tile-label {
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: rgba(20, 21, 15, 0.62);
+@keyframes goal-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
-.tile-value {
-  font-size: 1.55rem;
-  font-weight: 700;
-  line-height: 1.15;
-  margin-top: 2px;
+.goal-bars { grid-column: 1 / -1; display: grid; gap: 8px; margin-top: 12px; }
+
+.goal-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 0.85rem;
+  background: linear-gradient(90deg, var(--c) var(--p), color-mix(in srgb, var(--c) 45%, white) var(--p));
 }
+
+.goal-bar b { font-weight: 600; }
 
 /* ===== Weight hero ===== */
 
@@ -843,9 +862,10 @@ main {
   .nav-btn .nav-ico { font-size: 1.15rem; }
   .nav-btn.active { background: var(--lime-soft); }
 
-  .stat-tiles { gap: 10px; }
-  .stat-tile { padding: 16px; min-height: 96px; }
-  .tile-value { font-size: 1.3rem; }
+  .goal-pct { font-size: 3.6rem; }
+  .goal-ring-wrap { width: 150px; height: 150px; }
+  .goal-figure { font-size: 2.3rem; }
+  .goal-hero { gap: 6px 10px; }
   .card { padding: 20px 18px; border-radius: var(--radius-md); }
   .app-header h1 { font-size: 1.35rem; }
 }

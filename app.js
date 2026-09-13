@@ -5,6 +5,8 @@ const CONFIG = {
   POLL_MS: 15000,      // realtime polling interval
   TREND_WINDOW_DAYS: 14,
   STEPS_WINDOW_DAYS: 14,
+  // เป้าหมายรายวันของการ์ด Daily Goal (แคลอรี่ใช้จาก NUTRITION_PHASES)
+  DAILY_GOALS: { steps: 8000, sleepHours: 8 },
   // แผนโภชนาการ 18 สัปดาห์ (periodization) — วันไหนตรงช่วงไหนก็ใช้ตัวเลขของช่วงนั้น
   // start/end เป็น 'YYYY-MM-DD' แบบรวมวันแรก-วันสุดท้าย (inclusive)
   NUTRITION_PHASES: [
@@ -108,7 +110,7 @@ const barValueLabelPlugin = {
 
 // ===== State =====
 let dailyRecords = [];   // [{date, weight, isWorkout, workoutTypes:[], steps, caloriesIn, protein, carb, fat}], sorted ascending
-let colIndex = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1, mood: -1 };
+let colIndex = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1, mood: -1, sleep: -1 };
 let stepColumnExists = false;
 let weightChart = null;
 let stepsChart = null;
@@ -151,7 +153,7 @@ function fetchGvizTable() {
 
 // ===== Parsing =====
 function buildColumnIndex(cols) {
-  const idx = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1, mood: -1 };
+  const idx = { date: -1, workout: -1, weight: -1, step: -1, caloriesIn: -1, protein: -1, carb: -1, fat: -1, mood: -1, sleep: -1 };
   cols.forEach((col, i) => {
     const label = (col.label || '').toLowerCase();
     if (idx.date === -1 && col.type === 'date') idx.date = i;
@@ -165,6 +167,7 @@ function buildColumnIndex(cols) {
     if (idx.carb === -1 && (label.includes('คาร์บ') || label.includes('carb'))) idx.carb = i;
     if (idx.fat === -1 && (label.includes('ไขมัน') || label.includes('fat'))) idx.fat = i;
     if (idx.mood === -1 && (label.includes('mood') || label.includes('อารมณ์'))) idx.mood = i;
+    if (idx.sleep === -1 && (label.includes('sleep') || label.includes('นอน'))) idx.sleep = i;
   });
   return idx;
 }
@@ -191,7 +194,7 @@ function aggregateByDay(table, idx) {
     const key = dateKey(date);
 
     if (!map.has(key)) {
-      map.set(key, { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0, mood: null });
+      map.set(key, { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0, mood: null, sleep: null });
     }
     const rec = map.get(key);
 
@@ -212,6 +215,11 @@ function aggregateByDay(table, idx) {
       const c = cells[idx.step];
       const val = c ? c.v : null;
       if (rec.steps == null && typeof val === 'number' && val > 0) rec.steps = val;
+    }
+    if (idx.sleep !== -1) {
+      const c = cells[idx.sleep];
+      const val = c ? c.v : null;
+      if (rec.sleep == null && typeof val === 'number' && val > 0) rec.sleep = val;
     }
     if (idx.mood !== -1) {
       const c = cells[idx.mood];
@@ -285,7 +293,7 @@ function applyPlannedWorkouts(calendarData) {
     let rec = map.get(key);
     if (!rec) {
       // A planned day with no Sheet activity yet (typically in the future).
-      rec = { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0, mood: null };
+      rec = { date, weight: null, isWorkout: false, workoutTypes: [], plannedTitles: [], steps: null, caloriesIn: 0, protein: 0, carb: 0, fat: 0, mood: null, sleep: null };
       dailyRecords.push(rec);
       map.set(key, rec);
     }
@@ -805,24 +813,94 @@ function renderMoodCard() {
   wrap.innerHTML = `<div class="mood-row">${cells.join('')}</div>`;
 }
 
-function renderStatTiles() {
-  const now = new Date();
-  const monthCount = dailyRecords.filter(
-    (d) => d.isWorkout && d.date.getFullYear() === now.getFullYear() && d.date.getMonth() === now.getMonth()
-  ).length;
-  document.getElementById('tile-workout').textContent = `${monthCount} วัน`;
+// ===== Daily goal hero =====
+const GOAL_METRICS = [
+  { key: 'cal', color: '#f26b3a', icon: '🔥', label: 'แคลอรี่' },
+  { key: 'steps', color: '#6c3ff0', icon: '👣', label: 'ก้าว' },
+  { key: 'sleep', color: '#3aa6f0', icon: '🌙', label: 'นอน' },
+];
+const RING_RADII = [84, 64, 44];
 
-  const latest = [...dailyRecords].reverse().find((d) => d.caloriesIn > 0);
-  const pctEl = document.getElementById('tile-calpct');
-  if (!latest) {
-    pctEl.textContent = '–';
+function hasGoalData(r) {
+  return r.caloriesIn > 0 || r.steps != null || r.sleep != null;
+}
+
+// Prefer today; before anything is logged today fall back to the latest day,
+// and say which day it is so an old number is never read as today's.
+function pickGoalDay() {
+  const todayKey = dateKey(new Date());
+  const withData = dailyRecords.filter(hasGoalData);
+  return withData.find((r) => dateKey(r.date) === todayKey) || withData[withData.length - 1] || null;
+}
+
+function goalScores(rec) {
+  const calTarget = getNutritionTarget(rec.date).calories;
+  const ratio = rec.caloriesIn / calTarget;
+  return {
+    // Eating past the target is not extra progress on a diet, so overshoot
+    // counts down again instead of capping at 100%.
+    cal: rec.caloriesIn > 0 ? Math.max(0, ratio <= 1 ? ratio : 2 - ratio) : null,
+    steps: rec.steps != null ? Math.min(1, rec.steps / CONFIG.DAILY_GOALS.steps) : null,
+    sleep: rec.sleep != null ? Math.min(1, rec.sleep / CONFIG.DAILY_GOALS.sleepHours) : null,
+  };
+}
+
+function ensureGoalRings() {
+  const svg = document.getElementById('goal-rings');
+  if (svg.childElementCount) return svg;
+  svg.innerHTML = GOAL_METRICS.map((m, i) => {
+    const r = RING_RADII[i];
+    const c = 2 * Math.PI * r;
+    return `<circle cx="100" cy="100" r="${r}" fill="none" stroke="${m.color}" stroke-opacity="0.14" stroke-width="13"/>
+      <circle class="goal-arc" data-key="${m.key}" cx="100" cy="100" r="${r}" fill="none" stroke="${m.color}"
+        stroke-width="13" stroke-linecap="round" transform="rotate(-90 100 100)"
+        stroke-dasharray="${c}" stroke-dashoffset="${c}"/>`;
+  }).join('');
+  return svg;
+}
+
+function renderGoalHero() {
+  const svg = ensureGoalRings();
+  const rec = pickGoalDay();
+  const set = (id, text) => (document.getElementById(id).textContent = text);
+
+  if (!rec) {
+    ['goal-day', 'goal-pct', 'gm-cal', 'gm-steps', 'gm-sleep'].forEach((id) => set(id, '–'));
+    document.getElementById('goal-bars').innerHTML = '';
     return;
   }
-  const pct = Math.round((latest.caloriesIn / getNutritionTarget(latest.date).calories) * 100);
-  pctEl.textContent = `${pct}%`;
+
+  const isToday = dateKey(rec.date) === dateKey(new Date());
+  set('goal-day', isToday ? 'วันนี้' : rec.date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
+
+  const scores = goalScores(rec);
+  const present = Object.values(scores).filter((s) => s != null);
+  set('goal-pct', present.length ? Math.round((present.reduce((a, b) => a + b, 0) / present.length) * 100) : '–');
+
+  const calTarget = getNutritionTarget(rec.date).calories;
+  set('gm-cal', rec.caloriesIn > 0 ? Math.round(rec.caloriesIn).toLocaleString('th-TH') : '–');
+  set('gm-steps', rec.steps != null ? rec.steps.toLocaleString('th-TH') : '–');
+  set('gm-sleep', rec.sleep != null ? rec.sleep.toFixed(1) : '–');
+
+  svg.querySelectorAll('.goal-arc').forEach((arc, i) => {
+    const c = 2 * Math.PI * RING_RADII[i];
+    const s = scores[arc.dataset.key] || 0;
+    requestAnimationFrame(() => arc.setAttribute('stroke-dashoffset', c * (1 - s)));
+  });
+
+  const bars = [
+    { m: GOAL_METRICS[0], s: scores.cal, text: `${rec.caloriesIn > 0 ? Math.round(rec.caloriesIn).toLocaleString('th-TH') : '–'} / ${calTarget.toLocaleString('th-TH')}` },
+    { m: GOAL_METRICS[1], s: scores.steps, text: `${rec.steps != null ? rec.steps.toLocaleString('th-TH') : '–'} / ${CONFIG.DAILY_GOALS.steps.toLocaleString('th-TH')}` },
+    { m: GOAL_METRICS[2], s: scores.sleep, text: `${rec.sleep != null ? rec.sleep.toFixed(1) : '–'} / ${CONFIG.DAILY_GOALS.sleepHours}h` },
+  ];
+  document.getElementById('goal-bars').innerHTML = bars
+    .map(({ m, s, text }) => `<div class="goal-bar" style="--c:${m.color};--p:${Math.round((s || 0) * 100)}%">
+        <span>${m.icon} ${m.label}</span><b>${text}</b></div>`)
+    .join('');
 }
 
 function renderHome() {
+  renderGoalHero();
   renderTodaySchedule();
   renderMoodCard();
   renderTrend();
@@ -831,7 +909,6 @@ function renderHome() {
   renderHomeWorkoutCalendar();
   renderCaloriesCard();
   renderStepsCard();
-  renderStatTiles();
 }
 
 // ===== Render: Calendar =====

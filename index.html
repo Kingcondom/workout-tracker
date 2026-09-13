@@ -30,17 +30,21 @@
 
   <!-- ===== Home ===== -->
   <section id="page-home" class="page">
-    <div class="stat-tiles">
-      <div class="stat-tile lime">
-        <div class="tile-ico">🏋️</div>
-        <div class="tile-label">ออกกำลังกายเดือนนี้</div>
-        <div class="tile-value" id="tile-workout">–</div>
+    <div class="card goal-hero">
+      <div class="goal-left">
+        <div class="goal-kicker">DAILY GOAL · <span id="goal-day">–</span></div>
+        <div class="goal-pct"><span id="goal-pct">–</span><small>%</small></div>
+        <ul class="goal-metrics">
+          <li><span class="gm-ico">🔥</span><div><b id="gm-cal">–</b><span>แคลอรี่</span></div></li>
+          <li><span class="gm-ico">👣</span><div><b id="gm-steps">–</b><span>ก้าว</span></div></li>
+          <li><span class="gm-ico">🌙</span><div><b id="gm-sleep">–</b><span>ชั่วโมงนอน</span></div></li>
+        </ul>
       </div>
-      <div class="stat-tile pink">
-        <div class="tile-ico">🔥</div>
-        <div class="tile-label">แคลเทียบเป้าหมาย</div>
-        <div class="tile-value" id="tile-calpct">–</div>
+      <div class="goal-ring-wrap">
+        <svg id="goal-rings" viewBox="0 0 200 200" aria-hidden="true"></svg>
+        <div class="goal-figure">🏃</div>
       </div>
+      <div class="goal-bars" id="goal-bars"></div>
     </div>
 
     <div class="card">
