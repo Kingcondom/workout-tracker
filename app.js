@@ -859,7 +859,71 @@ function ensureGoalRings() {
   return svg;
 }
 
+// ===== Animated character (Lottie files built by scripts/build_animations.py) =====
+const CHARACTER_LABELS = {
+  lift: 'วันนี้ออกกำลังกายแล้ว 💪',
+  run: 'ก้าวถึงเป้าแล้ว',
+  wake: 'อรุณสวัสดิ์ ยังไม่ได้บันทึกการนอน',
+  idle: 'วันนี้ยังไม่ได้ขยับเลย',
+};
+let characterState = null;
+let characterAnim = null;
+
+// Always about today, even when the rings fall back to an earlier day.
+function pickCharacterState() {
+  const now = new Date();
+  const today = dailyRecords.find((r) => dateKey(r.date) === dateKey(now));
+  if (today && today.isWorkout) return 'lift';
+  if (today && today.steps != null && today.steps >= CONFIG.DAILY_GOALS.steps) return 'run';
+  if (now.getHours() < 12 && !(today && today.sleep != null)) return 'wake';
+  return 'idle';
+}
+
+function showCharacterFallback(el) {
+  if (characterAnim) characterAnim.destroy();
+  characterAnim = null;
+  el.textContent = '🏃';
+  el.classList.add('fallback');
+}
+
+async function renderCharacter() {
+  const el = document.getElementById('goal-figure');
+  const state = pickCharacterState();
+  document.getElementById('goal-figure-label').textContent = CHARACTER_LABELS[state];
+  // Data is re-polled every few seconds; only swap when the state changes so
+  // the animation doesn't restart on every refresh.
+  if (state === characterState) return;
+  characterState = state;
+
+  if (typeof lottie === 'undefined') {
+    showCharacterFallback(el);
+    return;
+  }
+  try {
+    const res = await fetch(`animations/${state}.json`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (characterState !== state) return;
+    if (characterAnim) characterAnim.destroy();
+    el.textContent = '';
+    el.classList.remove('fallback');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    characterAnim = lottie.loadAnimation({
+      container: el,
+      renderer: 'svg',
+      loop: true,
+      autoplay: !reduceMotion,
+      animationData: data,
+    });
+    if (reduceMotion) characterAnim.goToAndStop(0, true);
+  } catch {
+    showCharacterFallback(el);
+    characterState = null; // retry on the next poll
+  }
+}
+
 function renderGoalHero() {
+  renderCharacter();
   const svg = ensureGoalRings();
   const rec = pickGoalDay();
   const set = (id, text) => (document.getElementById(id).textContent = text);
