@@ -153,9 +153,9 @@ main {
 
 .goal-hero {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px 18px;
-  align-items: center;
+  align-items: end;
   background: #fbf6ef;
 }
 
@@ -183,14 +183,26 @@ main {
 .goal-metrics b { display: block; font-size: 1rem; font-weight: 600; line-height: 1.1; }
 .goal-metrics span { font-size: 0.72rem; color: var(--ink-soft); }
 
-.goal-ring-wrap { position: relative; width: 220px; height: 220px; }
-.goal-ring-wrap svg { width: 100%; height: 100%; }
+/* Character stands on the rings, which are tilted back into a floor. */
+.goal-left { position: relative; z-index: 2; align-self: start; }
+.goal-stage { position: relative; width: 300px; aspect-ratio: 3 / 4; }
+
+.goal-ring-wrap {
+  position: absolute;
+  left: 0;
+  top: 40%;
+  width: 100%;
+  aspect-ratio: 1;
+  transform: perspective(900px) rotateX(66deg);
+}
+
+.goal-ring-wrap svg { width: 100%; height: 100%; display: block; }
 .goal-arc { transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1); }
 
 .goal-visual { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 
-/* The character sits inside the innermost ring. */
-.goal-figure { position: absolute; inset: 20%; }
+/* Sized so the feet in the animation land on the centre of the rings. */
+.goal-figure { position: absolute; left: 0; right: 0; top: 0; height: 86%; }
 .goal-figure svg { display: block; }
 
 .goal-figure.fallback {
@@ -881,7 +893,9 @@ main {
   .nav-btn.active { background: var(--lime-soft); }
 
   .goal-pct { font-size: 3.6rem; }
-  .goal-ring-wrap { width: 150px; height: 150px; }
+  /* On phones the character overlaps the text column, as in the reference. */
+  .goal-visual { margin-left: -90px; }
+  .goal-stage { width: 240px; }
   .goal-figure.fallback { font-size: 2.3rem; }
   .goal-figure-label { max-width: 150px; font-size: 0.66rem; }
   .goal-hero { gap: 6px 10px; }

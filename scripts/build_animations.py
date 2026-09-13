@@ -7,7 +7,7 @@ same character, and poses can be tweaked here and regenerated:
 
     python3 scripts/build_animations.py
 
-Coordinates are in a 200x200 canvas with y pointing down. Lottie rotation is
+Coordinates are authored around a (100, 100) origin with y pointing down. Lottie rotation is
 clockwise-positive, so a limb drawn pointing down swings toward -x as its
 rotation increases.
 """
@@ -16,6 +16,16 @@ import os
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "animations")
 FR = 30
+
+# Poses are authored around a (100, 100) origin; the canvas is cropped to the
+# character's reach (overhead barbell, speed lines) so it can be drawn large
+# without a margin of empty space around it.
+CANVAS_W, CANVAS_H = 150, 170
+SHIFT_X, SHIFT_Y = -25, -20
+
+
+def shifted(v):
+    return (v[0] + SHIFT_X, v[1] + SHIFT_Y)
 
 
 def hexc(h, a=1):
@@ -132,7 +142,7 @@ class Scene:
         return self._ind
 
     def lottie(self):
-        return {"v": "5.7.4", "fr": FR, "ip": 0, "op": self.op, "w": 200, "h": 200,
+        return {"v": "5.7.4", "fr": FR, "ip": 0, "op": self.op, "w": CANVAS_W, "h": CANVAS_H,
                 "nm": self.name, "ddd": 0, "assets": [],
                 "layers": list(reversed(self.back_to_front))}
 
@@ -150,11 +160,13 @@ def build(name, op, pose, profile=False, extras=None):
     hip_x = 3 if profile else 8
     torso_w = 22 if profile else 30
 
-    sc.add("shadow", transform(p=(100, 176)), [group([ellipse((0, 0), (64, 10)), fill(hexc("1f2033"), 12)])])
+    sc.add("shadow", transform(p=shifted((100, 176))), [group([ellipse((0, 0), (64, 10)), fill(hexc("1f2033"), 12)])])
     if extras and "behind" in extras:
         extras["behind"](sc)
 
-    root = sc.add("root", transform(p=g("root_p", (100, 100)), r=g("root_r", 0)), null=True)
+    root_p = g("root_p", (100, 100))
+    root_p = [(t, shifted(v)) for t, v in root_p] if isinstance(root_p, list) else shifted(root_p)
+    root = sc.add("root", transform(p=root_p, r=g("root_r", 0)), null=True)
 
     def limb(side, kind, x, y):
         up_len, lo_len, color = (UPPER_ARM, FOREARM, SHIRT) if kind == "arm" else (THIGH, SHIN, PANTS)
@@ -269,7 +281,7 @@ def run():
         for i, (y, length) in enumerate([(-14, 18), (2, 26), (18, 14)]):
             start = i * 3
             sc.add(f"speed{i}", transform(
-                p=[(0, (72 - start, 100 + y)), (20, (54 - start, 100 + y))],
+                p=[(0, shifted((72 - start, 100 + y))), (20, shifted((54 - start, 100 + y)))],
                 o=[(0, 0), (6, 80), (20, 0)],
             ), [group([line((0, 0), (-length, 0)), stroke(hexc("6c3ff0", 1), 3)])])
 
