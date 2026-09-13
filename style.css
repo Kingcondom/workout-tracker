@@ -184,7 +184,7 @@ main {
 .goal-metrics span { font-size: 0.72rem; color: var(--ink-soft); }
 
 /* Character stands on the rings, which are tilted back into a floor. */
-.goal-left { position: relative; z-index: 2; align-self: start; }
+.goal-left { position: relative; z-index: 2; align-self: start; pointer-events: none; }
 .goal-stage { position: relative; width: 300px; aspect-ratio: 3 / 4; }
 
 .goal-ring-wrap {
@@ -196,7 +196,42 @@ main {
   transform: perspective(900px) rotateX(66deg);
 }
 
-.goal-ring-wrap svg { width: 100%; height: 100%; display: block; }
+.goal-ring-wrap svg { position: relative; width: 100%; height: 100%; display: block; }
+
+/* Horizontal drags spin the stage; vertical swipes still scroll the page. */
+.goal-stage { touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+.goal-stage.dragging { cursor: grabbing; }
+.goal-figure { will-change: transform; }
+
+.goal-ripple {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  border: 3px solid rgba(108, 63, 240, 0.35);
+  animation: goal-ripple 3.2s ease-out infinite;
+}
+
+.goal-ripple + .goal-ripple { animation-delay: 1.6s; }
+
+@keyframes goal-ripple {
+  from { transform: scale(0.4); opacity: 0.9; }
+  to { transform: scale(3.6); opacity: 0; }
+}
+
+@keyframes goal-glow {
+  0%, 100% { stroke-opacity: 1; }
+  50% { stroke-opacity: 0.55; }
+}
+
+.goal-arc.complete { animation: goal-glow 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .goal-ripple, .goal-arc.complete { animation: none; }
+  .goal-ripple { display: none; }
+}
 .goal-arc { transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1); }
 
 .goal-visual { display: flex; flex-direction: column; align-items: center; gap: 4px; }

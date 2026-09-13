@@ -922,6 +922,88 @@ async function renderCharacter() {
   }
 }
 
+// ===== Goal stage motion: the ring floor spins, the character turns with you =====
+const STAGE_BASE_SPIN = 14;      // deg/s when nobody is touching it
+const STAGE_MAX_SPIN = 720;
+const STAGE_MAX_YAW = 50;
+
+function initGoalStageMotion() {
+  const stage = document.getElementById('goal-stage');
+  const rings = document.getElementById('goal-rings');
+  const figure = document.getElementById('goal-figure');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const base = reduceMotion ? 0 : STAGE_BASE_SPIN;
+  const m = { spin: 0, spinVel: base, yaw: 0, yawTarget: 0, hoverYaw: 0,
+              dragging: false, lastX: 0, lastT: 0, speed: 1 };
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+  stage.addEventListener('pointerdown', (e) => {
+    m.dragging = true;
+    m.lastX = e.clientX;
+    m.lastT = e.timeStamp;
+    stage.classList.add('dragging');
+    stage.setPointerCapture(e.pointerId);
+  });
+
+  stage.addEventListener('pointermove', (e) => {
+    if (m.dragging) {
+      const dx = e.clientX - m.lastX;
+      const dt = Math.max(1, e.timeStamp - m.lastT) / 1000;
+      m.spin += dx * 0.8;
+      m.spinVel = clamp((dx * 0.8) / dt, -STAGE_MAX_SPIN, STAGE_MAX_SPIN);
+      // Turn toward the direction of the drag, harder the faster it moves.
+      m.yawTarget = clamp(m.spinVel * 0.12, -STAGE_MAX_YAW, STAGE_MAX_YAW);
+      m.lastX = e.clientX;
+      m.lastT = e.timeStamp;
+    } else if (e.pointerType === 'mouse') {
+      const r = stage.getBoundingClientRect();
+      m.hoverYaw = clamp(((e.clientX - (r.left + r.width / 2)) / (r.width / 2)) * 35, -35, 35);
+    }
+  });
+
+  const release = () => {
+    if (!m.dragging) return;
+    m.dragging = false;
+    // Pointer capture suppresses pointerleave, so don't trust the last hover angle.
+    m.hoverYaw = 0;
+    stage.classList.remove('dragging');
+  };
+  stage.addEventListener('pointerup', release);
+  stage.addEventListener('pointercancel', release);
+  stage.addEventListener('pointerleave', () => { m.hoverYaw = 0; });
+
+  let prev = null;
+  const frame = (ts) => {
+    const dt = prev == null ? 0 : Math.min(0.05, (ts - prev) / 1000);
+    prev = ts;
+    if (stage.offsetParent !== null) {
+      if (!m.dragging) {
+        // Let a flick coast, then settle back to the idle turntable speed.
+        m.spinVel += (base - m.spinVel) * Math.min(1, dt * 1.8);
+        m.spin += m.spinVel * dt;
+        // Stay turned while the floor is still coasting, then face the pointer
+        // (or the front) once it has settled.
+        const coastYaw = clamp((m.spinVel - base) * 0.12, -STAGE_MAX_YAW, STAGE_MAX_YAW);
+        m.yawTarget = Math.abs(coastYaw) > 2 ? coastYaw : m.hoverYaw;
+      }
+      m.yaw += (m.yawTarget - m.yaw) * Math.min(1, dt * 9);
+      if (Math.abs(m.yaw) < 0.05 && Math.abs(m.yawTarget) < 0.05) m.yaw = m.yawTarget = 0;
+      rings.style.transform = `rotate(${m.spin % 360}deg)`;
+      figure.style.transform = `perspective(700px) rotateY(${m.yaw}deg)`;
+
+      // The character hurries up while the stage is being spun fast.
+      const speed = 1 + Math.min(2, Math.abs(m.spinVel) / 300);
+      if (characterAnim && Math.abs(speed - m.speed) > 0.08) {
+        m.speed = speed;
+        characterAnim.setSpeed(speed);
+      }
+    }
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
 function renderGoalHero() {
   renderCharacter();
   const svg = ensureGoalRings();
@@ -950,6 +1032,7 @@ function renderGoalHero() {
     const c = 2 * Math.PI * RING_RADII[i];
     const s = scores[arc.dataset.key] || 0;
     requestAnimationFrame(() => arc.setAttribute('stroke-dashoffset', c * (1 - s)));
+    arc.classList.toggle('complete', s >= 1);
   });
 
   const bars = [
@@ -1111,6 +1194,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('macro-popup-overlay').addEventListener('click', (e) => {
     if (e.target.id === 'macro-popup-overlay') closeMacroPopup();
   });
+  initGoalStageMotion();
   initPhotoPage();
   startPolling();
 });
