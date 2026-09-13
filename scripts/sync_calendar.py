@@ -58,6 +58,14 @@ def unfold_ics(text):
     return unfolded
 
 
+def unescape_ics_text(value):
+    # RFC 5545 escapes commas, semicolons, backslashes and newlines in text.
+    return (
+        value.replace("\\n", " ").replace("\\N", " ")
+        .replace("\\,", ",").replace("\\;", ";").replace("\\\\", "\\")
+    )
+
+
 def parse_ics_moment(value, params):
     """Returns (date, "HH:MM" or None). None means an all-day event."""
     value = value.strip()
@@ -87,7 +95,7 @@ def parse_vevents(lines):
             key = key_bits[0]
             params = key_bits[1:]
             if key == "SUMMARY":
-                current["summary"] = value.strip()
+                current["summary"] = unescape_ics_text(value.strip())
             elif key == "DTSTART":
                 current["dtstart_raw"] = value
                 current["dtstart_params"] = params

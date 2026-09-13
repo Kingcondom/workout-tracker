@@ -656,7 +656,8 @@ main {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  /* minmax(0, …) stops long plan names from widening their column */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -675,6 +676,8 @@ main {
   padding: 8px;
   font-size: 0.72rem;
   position: relative;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .cal-day.empty { background: transparent; }
@@ -684,6 +687,9 @@ main {
 .cal-day.planned { background: var(--lime-soft); }
 .cal-day .plan-tag {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   margin-top: 4px;
   color: var(--ink);
   font-weight: 600;
@@ -868,4 +874,9 @@ main {
   .goal-hero { gap: 6px 10px; }
   .card { padding: 20px 18px; border-radius: var(--radius-md); }
   .app-header h1 { font-size: 1.35rem; }
+  .calendar-grid { gap: 3px; }
+  .cal-day { padding: 5px 3px; min-height: 64px; border-radius: 10px; font-size: 0.66rem; }
+  .cal-day .dumbbell { top: 3px; right: 2px; font-size: 0.7rem; }
+  .cal-day .sched-emojis { font-size: 0.62rem; letter-spacing: 0; overflow-wrap: anywhere; }
+  .cal-day .plan-tag { font-size: 0.58rem; }
 }

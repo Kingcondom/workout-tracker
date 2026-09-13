@@ -914,6 +914,11 @@ function renderHome() {
 // ===== Render: Calendar =====
 const DOW_TH = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
+// "🏋️ Upper (Shoulders/Back/Chest/Arms)" -> "Upper"; the full title stays in the day detail.
+function shortPlanName(title) {
+  return title.replace(/^[^\p{L}\p{N}]+/u, '').split('(')[0].split(':').pop().trim() || title;
+}
+
 function renderCalendar() {
   const label = document.getElementById('cal-month-label');
   label.textContent = calendarCursor.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
@@ -959,7 +964,7 @@ function renderCalendar() {
       const emojis = [...new Set(sched.map((s) => s.emoji))].join('');
       html += `<span class="sched-emojis" title="${sched.map((s) => `${s.label} ${formatScheduleTime(s)}`).join(', ')}">${emojis}</span>`;
     }
-    if (planned) html += `<span class="plan-tag">${rec.plannedTitles.join(', ')}</span>`;
+    if (planned) html += `<span class="plan-tag" title="${rec.plannedTitles.join(', ')}">${rec.plannedTitles.map(shortPlanName).join(', ')}</span>`;
     el.innerHTML = html;
 
     if (rec) {
