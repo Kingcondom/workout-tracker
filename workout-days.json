@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-01T10:13:26.800209+00:00",
+  "generatedAt": "2026-11-07T09:44:33.624716+00:00",
   "keywords": [
     "upper",
     "push",
@@ -50,6 +50,24 @@
       ]
     },
     {
+      "date": "2026-11-03",
+      "titles": [
+        "📘 เรียน: Androgenetic Alopecia — หดก่อนหลุด / pull test 60·2·4 / ราก 5 แบบ / minoxidil·finasteride·LDOM"
+      ]
+    },
+    {
+      "date": "2026-11-05",
+      "titles": [
+        "🔁 ทวน: AGA + Pull test — หดก่อนหลุด / 60·2·4 / club·แหลม·ปลอก·งอ·หัก / PSA ×2"
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "titles": [
+        "🔁 ทวน: AGA + Pull test — หดก่อนหลุด / 60·2·4 / club·แหลม·ปลอก·งอ·หัก / PSA ×2"
+      ]
+    },
+    {
       "date": "2027-01-04",
       "titles": [
         "🏁 Phase 3 เริ่ม: Final Push"
@@ -58,167 +76,11 @@
   ],
   "schedule": [
     {
-      "date": "2026-10-25",
-      "items": [
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": null,
-          "end": null
-        }
-      ]
-    },
-    {
-      "date": "2026-10-26",
-      "items": [
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": "09:00",
-          "end": "10:30"
-        },
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": "13:00",
-          "end": "16:00"
-        },
-        {
-          "emoji": "🏥",
-          "label": "วอร์ด",
-          "start": "16:00",
-          "end": "22:00"
-        }
-      ]
-    },
-    {
-      "date": "2026-10-27",
-      "items": [
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": "10:00",
-          "end": "14:00"
-        }
-      ]
-    },
-    {
-      "date": "2026-10-28",
-      "items": [
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "🏥",
-          "label": "วอร์ด",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": "10:30",
-          "end": "12:00"
-        },
-        {
-          "emoji": "🏥",
-          "label": "วอร์ด",
-          "start": "16:00",
-          "end": "22:00"
-        }
-      ]
-    },
-    {
-      "date": "2026-10-29",
-      "items": [
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "🏥",
-          "label": "วอร์ด",
-          "start": "09:00",
-          "end": "12:00"
-        },
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": "13:00",
-          "end": "14:00"
-        },
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": "17:40",
-          "end": "18:00"
-        }
-      ]
-    },
-    {
-      "date": "2026-10-30",
-      "items": [
-        {
-          "emoji": "📌",
-          "label": "อื่นๆ",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": null,
-          "end": null
-        },
-        {
-          "emoji": "📚",
-          "label": "เรียน",
-          "start": "13:00",
-          "end": "15:00"
-        },
-        {
-          "emoji": "🏥",
-          "label": "วอร์ด",
-          "start": "16:00",
-          "end": "22:00"
-        }
-      ]
-    },
-    {
       "date": "2026-10-31",
       "items": [
         {
-          "emoji": "📌",
-          "label": "อื่นๆ",
+          "emoji": "📚",
+          "label": "เรียน",
           "start": null,
           "end": null
         },
@@ -229,8 +91,8 @@
           "end": null
         },
         {
-          "emoji": "📚",
-          "label": "เรียน",
+          "emoji": "📌",
+          "label": "อื่นๆ",
           "start": null,
           "end": null
         },
@@ -293,14 +155,20 @@
       "date": "2026-11-02",
       "items": [
         {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
           "emoji": "🏥",
           "label": "วอร์ด",
           "start": null,
           "end": null
         },
         {
-          "emoji": "📌",
-          "label": "อื่นๆ",
+          "emoji": "📚",
+          "label": "เรียน",
           "start": null,
           "end": null
         },
@@ -327,6 +195,12 @@
     {
       "date": "2026-11-03",
       "items": [
+        {
+          "emoji": "📚",
+          "label": "เรียน",
+          "start": null,
+          "end": null
+        },
         {
           "emoji": "📌",
           "label": "อื่นๆ",
@@ -381,10 +255,28 @@
           "end": null
         },
         {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": null,
+          "end": null
+        },
+        {
           "emoji": "📌",
           "label": "อื่นๆ",
           "start": "13:00",
           "end": "16:00"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:00",
+          "end": "16:50"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:50",
+          "end": "17:15"
         },
         {
           "emoji": "📝",
@@ -397,6 +289,12 @@
           "label": "วอร์ด",
           "start": "19:30",
           "end": "19:50"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:00",
+          "end": "21:00"
         }
       ]
     },
@@ -404,14 +302,26 @@
       "date": "2026-11-05",
       "items": [
         {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
           "emoji": "🏥",
           "label": "วอร์ด",
           "start": null,
           "end": null
         },
         {
-          "emoji": "📌",
-          "label": "อื่นๆ",
+          "emoji": "📚",
+          "label": "เรียน",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
           "start": null,
           "end": null
         },
@@ -420,6 +330,36 @@
           "label": "สอบ",
           "start": "10:00",
           "end": "12:00"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:00",
+          "end": "17:15"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "17:15",
+          "end": "18:00"
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "18:30",
+          "end": "18:50"
+        },
+        {
+          "emoji": "🏋️",
+          "label": "ออกกำลังกาย",
+          "start": "19:00",
+          "end": "19:20"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:00",
+          "end": "20:40"
         }
       ]
     },
@@ -449,6 +389,12 @@
           "label": "วอร์ด",
           "start": "16:00",
           "end": "22:00"
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "20:00",
+          "end": "20:20"
         }
       ]
     },
@@ -464,8 +410,38 @@
         {
           "emoji": "📝",
           "label": "สอบ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
           "start": "09:00",
           "end": "12:00"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "13:00",
+          "end": "13:55"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "14:00",
+          "end": "15:25"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "15:30",
+          "end": "16:30"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "19:00",
+          "end": "19:20"
         }
       ]
     },
@@ -473,14 +449,14 @@
       "date": "2026-11-08",
       "items": [
         {
-          "emoji": "🏋️",
-          "label": "ออกกำลังกาย",
+          "emoji": "📌",
+          "label": "อื่นๆ",
           "start": null,
           "end": null
         },
         {
-          "emoji": "📌",
-          "label": "อื่นๆ",
+          "emoji": "🏋️",
+          "label": "ออกกำลังกาย",
           "start": null,
           "end": null
         },
@@ -489,6 +465,36 @@
           "label": "วอร์ด",
           "start": "08:00",
           "end": "22:00"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "19:00",
+          "end": "19:20"
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "19:30",
+          "end": "19:50"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:00",
+          "end": "20:20"
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "20:20",
+          "end": "20:40"
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "20:40",
+          "end": "21:00"
         }
       ]
     },
@@ -498,6 +504,12 @@
         {
           "emoji": "📌",
           "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
           "start": null,
           "end": null
         },
@@ -516,8 +528,26 @@
         {
           "emoji": "📌",
           "label": "อื่นๆ",
+          "start": "17:00",
+          "end": "17:50"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:30",
+          "end": "20:55"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
           "start": "21:00",
           "end": "21:10"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "21:10",
+          "end": "21:30"
         }
       ]
     },
@@ -525,14 +555,20 @@
       "date": "2026-11-10",
       "items": [
         {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
           "emoji": "🏥",
           "label": "วอร์ด",
           "start": null,
           "end": null
         },
         {
-          "emoji": "📌",
-          "label": "อื่นๆ",
+          "emoji": "📝",
+          "label": "สอบ",
           "start": null,
           "end": null
         },
@@ -541,6 +577,36 @@
           "label": "อื่นๆ",
           "start": "09:00",
           "end": "10:30"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:00",
+          "end": "16:50"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:50",
+          "end": "18:05"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "18:05",
+          "end": "18:45"
+        },
+        {
+          "emoji": "🏋️",
+          "label": "ออกกำลังกาย",
+          "start": "19:00",
+          "end": "19:20"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:00",
+          "end": "20:20"
         }
       ]
     },
@@ -548,14 +614,20 @@
       "date": "2026-11-11",
       "items": [
         {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
           "emoji": "🏋️",
           "label": "ออกกำลังกาย",
           "start": null,
           "end": null
         },
         {
-          "emoji": "📌",
-          "label": "อื่นๆ",
+          "emoji": "📝",
+          "label": "สอบ",
           "start": null,
           "end": null
         },
@@ -564,12 +636,42 @@
           "label": "เรียน",
           "start": "13:00",
           "end": "15:00"
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "15:00",
+          "end": "16:05"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:05",
+          "end": "17:35"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "19:00",
+          "end": "19:20"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:00",
+          "end": "20:20"
         }
       ]
     },
     {
       "date": "2026-11-12",
       "items": [
+        {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": null,
+          "end": null
+        },
         {
           "emoji": "📌",
           "label": "อื่นๆ",
@@ -581,6 +683,24 @@
           "label": "อื่นๆ",
           "start": "10:30",
           "end": "12:00"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "17:00",
+          "end": "17:40"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:30",
+          "end": "21:00"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "21:10",
+          "end": "21:35"
         }
       ]
     },
@@ -588,16 +708,46 @@
       "date": "2026-11-13",
       "items": [
         {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
           "emoji": "🏥",
           "label": "วอร์ด",
           "start": null,
           "end": null
         },
         {
-          "emoji": "📌",
-          "label": "อื่นๆ",
+          "emoji": "📝",
+          "label": "สอบ",
           "start": null,
           "end": null
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:00",
+          "end": "17:45"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "17:45",
+          "end": "19:05"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "19:05",
+          "end": "19:30"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "20:00",
+          "end": "20:25"
         }
       ]
     },
@@ -611,10 +761,34 @@
           "end": null
         },
         {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": null,
+          "end": null
+        },
+        {
           "emoji": "📌",
           "label": "อื่นๆ",
           "start": "09:00",
           "end": "10:00"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "10:00",
+          "end": "11:35"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "13:00",
+          "end": "16:40"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:40",
+          "end": "17:30"
         }
       ]
     },
@@ -630,6 +804,150 @@
         {
           "emoji": "📝",
           "label": "สอบ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "09:00",
+          "end": "11:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-16",
+      "items": [
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "16:00",
+          "end": "17:05"
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": "17:10",
+          "end": "18:25"
+        },
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": "21:00",
+          "end": "21:10"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-17",
+      "items": [
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": "08:30",
+          "end": "16:30"
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "16:30",
+          "end": "22:30"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "items": [
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "📝",
+          "label": "สอบ",
+          "start": "08:45",
+          "end": "11:00"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "items": [
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": null,
+          "end": null
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "items": [
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
+          "start": "16:00",
+          "end": "22:00"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-21",
+      "items": [
+        {
+          "emoji": "📌",
+          "label": "อื่นๆ",
+          "start": null,
+          "end": null
+        },
+        {
+          "emoji": "🏥",
+          "label": "วอร์ด",
           "start": null,
           "end": null
         }
